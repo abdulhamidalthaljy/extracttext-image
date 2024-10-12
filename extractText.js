@@ -104,6 +104,25 @@ app.get("/", (req, res) => {
     .copy-btn:hover {
       background-color: #357abd;
     }
+    .loading {
+      display: none;
+      margin-top: 20px;
+      font-size: 16px;
+      color: #4a90e2;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4a90e2;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 10px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -113,6 +132,10 @@ app.get("/", (req, res) => {
       <input type="file" id="imageInput" name="image" accept="image/*" required />
       <button type="submit">Extract Text</button>
     </form>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      Please wait, extracting text...
+    </div>
     <div class="result-container" id="resultContainer" style="display: none;">
       <button class="copy-btn" id="copyBtn">Copy</button>
       <div class="result" id="result">
@@ -129,22 +152,33 @@ app.get("/", (req, res) => {
         alert("Please select an image file.");
         return;
       }
+
+      // Show loading message and hide previous results
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("resultContainer").style.display = "none";
+
       formData.append("image", imageFile);
       try {
         const response = await fetch("/api/extractText", {
           method: "POST",
           body: formData,
         });
+
+        document.getElementById("loading").style.display = "none"; // Hide loading message
+
         if (response.ok) {
           const result = await response.json();
           document.getElementById("result").textContent = result.text;
           document.getElementById("resultContainer").style.display = "block";
         } else {
           document.getElementById("result").textContent = "Error: Failed to extract text.";
+          document.getElementById("resultContainer").style.display = "block";
         }
       } catch (error) {
         console.error("Error:", error);
+        document.getElementById("loading").style.display = "none";
         document.getElementById("result").textContent = "Error: Unable to process the image.";
+        document.getElementById("resultContainer").style.display = "block";
       }
     });
 
@@ -159,6 +193,7 @@ app.get("/", (req, res) => {
   </script>
 </body>
 </html>
+
 
   `);
 });
