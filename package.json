@@ -1,0 +1,15 @@
+{
+  "name": "image-to-text-nodejs",
+  "version": "1.0.0",
+  "description": "Image-to-text OCR extraction using Tesseract and Node.js",
+  "main": "extracttext.js",
+  "scripts": {
+    "start": "node extracttext.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "node-tesseract-ocr": "^1.0.0"
+  }
+}
