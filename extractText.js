@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   <title>Image OCR Extraction</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       background-color: #f0f4f8;
       color: #333;
       margin: 0;
@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
     }
     .container {
       background-color: #fff;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       border-radius: 12px;
       padding: 30px;
       max-width: 600px;
@@ -77,7 +77,7 @@ app.get("/", (req, res) => {
     button:hover {
       background-color: #357abd;
     }
-    .result {
+    .result-container {
       margin-top: 25px;
       background-color: #f0f4f8;
       border-radius: 8px;
@@ -87,13 +87,22 @@ app.get("/", (req, res) => {
       white-space: pre-wrap;
       max-height: 300px;
       overflow-y: auto;
-      text-align: left;
+      position: relative;
     }
-    .copy-button {
-      background-color: #2ecc71; /* Green */
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
     }
-    .copy-button:hover {
-      background-color: #27ae60; /* Darker green */
+    .copy-btn:hover {
+      background-color: #357abd;
     }
   </style>
 </head>
@@ -101,78 +110,56 @@ app.get("/", (req, res) => {
   <div class="container">
     <h2>Upload an Image for Text Extraction</h2>
     <form id="uploadForm" method="POST" enctype="multipart/form-data">
-      <input
-        type="file"
-        id="imageInput"
-        name="image"
-        accept="image/*"
-        required
-      />
-      <br /><br />
+      <input type="file" id="imageInput" name="image" accept="image/*" required />
       <button type="submit">Extract Text</button>
     </form>
-
-    <div class="result" id="result">
-      <!-- Extracted text will appear here -->
+    <div class="result-container" id="resultContainer" style="display: none;">
+      <button class="copy-btn" id="copyBtn">Copy</button>
+      <div class="result" id="result">
+        <!-- Extracted text will appear here -->
+      </div>
     </div>
-    <button class="copy-button" id="copyButton" style="display: none;">Copy Text</button>
   </div>
-
   <script>
-    document
-      .getElementById("uploadForm")
-      .addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        const formData = new FormData();
-        const imageFile = document.getElementById("imageInput").files[0];
-
-        if (!imageFile) {
-          alert("Please select an image file.");
-          return;
+    document.getElementById("uploadForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData();
+      const imageFile = document.getElementById("imageInput").files[0];
+      if (!imageFile) {
+        alert("Please select an image file.");
+        return;
+      }
+      formData.append("image", imageFile);
+      try {
+        const response = await fetch("/api/extractText", {
+          method: "POST",
+          body: formData,
+        });
+        if (response.ok) {
+          const result = await response.json();
+          document.getElementById("result").textContent = result.text;
+          document.getElementById("resultContainer").style.display = "block";
+        } else {
+          document.getElementById("result").textContent = "Error: Failed to extract text.";
         }
+      } catch (error) {
+        console.error("Error:", error);
+        document.getElementById("result").textContent = "Error: Unable to process the image.";
+      }
+    });
 
-        formData.append("image", imageFile);
-
-        try {
-          const response = await fetch(
-            "http://localhost:3000/api/extractText",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-          if (response.ok) {
-            const result = await response.json();
-            const resultDiv = document.getElementById("result");
-            resultDiv.textContent = result.text;
-
-            // Show the Copy Text button
-            const copyButton = document.getElementById("copyButton");
-            copyButton.style.display = "block";
-
-            // Set the button's onclick event to copy text
-            copyButton.onclick = () => {
-              navigator.clipboard.writeText(result.text).then(() => {
-                alert("Text copied to clipboard!");
-              }).catch(err => {
-                console.error("Error copying text: ", err);
-              });
-            };
-          } else {
-            document.getElementById("result").textContent =
-              "Error: Failed to extract text.";
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          document.getElementById("result").textContent =
-            "Error: Unable to process the image.";
-        }
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      const text = document.getElementById("result").textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Text copied to clipboard!");
+      }, (err) => {
+        console.error("Error copying text: ", err);
       });
+    });
   </script>
 </body>
 </html>
+
   `);
 });
 
